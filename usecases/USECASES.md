@@ -1,73 +1,179 @@
-# ABDM Use Case Scripts
+# ABDM Use Cases (Terminal Commands)
 
-All ABDM workflow scripts are grouped in this folder.
-
-Run scripts as Python modules from the project root:
+Run from project root:
 
 ```bash
 cd /Users/chanpreetsingh/ABDM
-./.venv/bin/python -m usecases.<script_name> --help
 ```
 
-## Scripts
+## `abdm_session_cert.py`
 
-- `abdm_session_cert.py`
-  - Session and certificate operations.
-  - Flows: `token`, `certificate`, `public-key`, `session-raw`.
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_session_cert --help
 
-- `abdm_enroll_aadhaar.py`
-  - Aadhaar-based ABHA enrollment flow.
-  - Flows: `request-otp`, `enrol`, `card`, `full`.
-  - Example:
-    - `./.venv/bin/python -m usecases.abdm_enroll_aadhaar --flow full`
-  - Card output default: `ABHA_card/abha-card.(png|pdf|bin)`.
+# flow: token
+./.venv/bin/python -m usecases.abdm_session_cert --flow token --json
 
-- `abdm_flow.py`
-  - Backward-compatible interactive wrapper for full Aadhaar flow.
-  - Uses `abdm_enroll_aadhaar.py` internally.
+# flow: certificate
+./.venv/bin/python -m usecases.abdm_session_cert --flow certificate --json
 
-- `abdm_enroll_dl.py`
-  - Driving Licence enrollment workflow.
-  - Flows: `session-v05`, `request-otp`, `auth-abdm`, `enrol-document`.
-  - `enrol-document` expects `--body` JSON file.
+# flow: public-key
+./.venv/bin/python -m usecases.abdm_session_cert --flow public-key --json
 
-- `abdm_enroll_biometric.py`
-  - Biometric-based enrollment (`byAadhaar`) using raw JSON body file.
-  - Requires `--body` JSON.
+# flow: public-key and write to file
+./.venv/bin/python -m usecases.abdm_session_cert --flow public-key --write-key /tmp/abdm_pub.b64
 
-- `abdm_verification.py`
-  - ABHA verification/login workflows.
-  - Flows:
-    - `request-otp-aadhaar`
-    - `request-otp-abha`
-    - `verify-otp`
-    - `password`
-    - `search`
-    - `verify-user`
+# flow: session-raw
+./.venv/bin/python -m usecases.abdm_session_cert --flow session-raw --json
+```
 
-- `abdm_forgot_retrieve.py`
-  - Convenience entry for forgot/retrieval style login OTP verification.
-  - Delegates to verification script behavior.
+## `abdm_enroll_aadhaar.py`
 
-- `abdm_profile.py`
-  - Profile account operations.
-  - Flows: `get-profile`, `download-card`, `email-verification-link`.
-  - Requires `X-Token` for profile-secured calls.
-  - `download-card` default output: `ABHA_card/abha-card.(png|pdf|bin)`.
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_enroll_aadhaar --help
 
-- `abdm_benefit.py`
-  - Benefit APIs.
-  - Flows: `link`, `search`, `get-by-abha`.
-  - `link` and `search` use `--body` JSON.
+# flow: request-otp
+./.venv/bin/python -m usecases.abdm_enroll_aadhaar --flow request-otp --aadhaar 123456789012 --mobile 9876543210 --json
 
-- `abdm_scan_share.py`
-  - Scan and Share / gateway bridge utilities.
-  - Flows: `patch-bridge-url`, `patient-on-share`, `certs`, `openid-config`.
-  - `patch-bridge-url` and `patient-on-share` use `--body` JSON.
+# flow: enrol (uses txnId from state by default)
+./.venv/bin/python -m usecases.abdm_enroll_aadhaar --flow enrol --otp 123456 --json
+
+# flow: card (downloads to ABHA_card by default)
+./.venv/bin/python -m usecases.abdm_enroll_aadhaar --flow card --json
+
+# flow: full (interactive end-to-end)
+./.venv/bin/python -m usecases.abdm_enroll_aadhaar --flow full
+
+# optional: clear local state before run
+./.venv/bin/python -m usecases.abdm_enroll_aadhaar --flow full --clear-state
+```
+
+## `abdm_flow.py` (legacy wrapper)
+
+```bash
+# interactive full flow (same as abdm_enroll_aadhaar full)
+./.venv/bin/python -m usecases.abdm_flow
+```
+
+## `abdm_enroll_dl.py`
+
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_enroll_dl --help
+
+# flow: session-v05
+./.venv/bin/python -m usecases.abdm_enroll_dl --flow session-v05
+
+# flow: request-otp
+./.venv/bin/python -m usecases.abdm_enroll_dl --flow request-otp --mobile 9876543210
+
+# flow: auth-abdm
+./.venv/bin/python -m usecases.abdm_enroll_dl --flow auth-abdm --otp 123456
+
+# flow: enrol-document (body from file)
+./.venv/bin/python -m usecases.abdm_enroll_dl --flow enrol-document --body ./dl-enrol.json
+```
+
+## `abdm_enroll_biometric.py`
+
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_enroll_biometric --help
+
+# body-driven biometric enrollment
+./.venv/bin/python -m usecases.abdm_enroll_biometric --body ./biometric-enrol.json
+```
+
+## `abdm_verification.py`
+
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_verification --help
+
+# flow: request-otp-aadhaar
+./.venv/bin/python -m usecases.abdm_verification --flow request-otp-aadhaar --aadhaar 123456789012
+
+# flow: request-otp-abha
+./.venv/bin/python -m usecases.abdm_verification --flow request-otp-abha --abha-number 91-1234-5678-9012
+
+# flow: verify-otp
+./.venv/bin/python -m usecases.abdm_verification --flow verify-otp --otp 123456
+
+# flow: password
+./.venv/bin/python -m usecases.abdm_verification --flow password --abha-number 91-1234-5678-9012 --password '***'
+
+# flow: search
+./.venv/bin/python -m usecases.abdm_verification --flow search --abha-number 91-1234-5678-9012
+
+# flow: verify-user
+./.venv/bin/python -m usecases.abdm_verification --flow verify-user --abha-number 91-1234-5678-9012 --txn-id <TXN_ID> --t-token "Bearer <TOKEN>"
+```
+
+## `abdm_forgot_retrieve.py`
+
+```bash
+# same CLI options/flows as abdm_verification
+./.venv/bin/python -m usecases.abdm_forgot_retrieve --help
+./.venv/bin/python -m usecases.abdm_forgot_retrieve --flow request-otp-aadhaar --aadhaar 123456789012
+./.venv/bin/python -m usecases.abdm_forgot_retrieve --flow verify-otp --otp 123456
+```
+
+## `abdm_profile.py`
+
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_profile --help
+
+# flow: get-profile
+./.venv/bin/python -m usecases.abdm_profile --flow get-profile --x-token "<X_TOKEN>"
+
+# flow: download-card (default path ABHA_card/abha-card.*)
+./.venv/bin/python -m usecases.abdm_profile --flow download-card --x-token "<X_TOKEN>"
+
+# flow: email-verification-link (optional body file)
+./.venv/bin/python -m usecases.abdm_profile --flow email-verification-link --x-token "<X_TOKEN>" --body ./email-link-body.json
+```
+
+## `abdm_benefit.py`
+
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_benefit --help
+
+# flow: link
+./.venv/bin/python -m usecases.abdm_benefit --flow link --x-token "<X_TOKEN>" --body ./benefit-link.json
+
+# flow: search
+./.venv/bin/python -m usecases.abdm_benefit --flow search --x-token "<X_TOKEN>" --body ./benefit-search.json
+
+# flow: get-by-abha
+./.venv/bin/python -m usecases.abdm_benefit --flow get-by-abha --x-token "<X_TOKEN>" --abha-number 91-1234-5678-9012
+```
+
+## `abdm_scan_share.py`
+
+```bash
+# show help
+./.venv/bin/python -m usecases.abdm_scan_share --help
+
+# flow: patch-bridge-url
+./.venv/bin/python -m usecases.abdm_scan_share --flow patch-bridge-url --body ./bridge-url.json
+
+# flow: patient-on-share
+./.venv/bin/python -m usecases.abdm_scan_share --flow patient-on-share --body ./on-share.json
+
+# flow: certs
+./.venv/bin/python -m usecases.abdm_scan_share --flow certs
+
+# flow: openid-config
+./.venv/bin/python -m usecases.abdm_scan_share --flow openid-config
+```
 
 ## Notes
 
-- Shared logic is in `abdm_common/` (HTTP, crypto, state, URL env resolution).
-- Config defaults and env overrides are in `config.py`.
-- Session state is stored in `~/.abdm_session.json` unless `ABDM_STATE_FILE` is set.
-- Downloaded cards are stored in `ABHA_card/` by default.
+- Shared runtime logic is in `abdm_common/`.
+- Configuration and env overrides are in `config.py`.
+- Session state default: `~/.abdm_session.json` (override via `ABDM_STATE_FILE`).
+- Downloaded cards default to `ABHA_card/`.
